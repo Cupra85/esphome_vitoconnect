@@ -17,51 +17,79 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
-
-#include <stdint.h>
-#include <assert.h>
-#include <functional>
-#include <string.h>  // for memcpy
-#include "esphome/core/helpers.h"  // für millis()
+#include "vitoconnect.h"
+#include "esphome/core/log.h"
 
 namespace esphome {
 namespace vitoconnect {
 
-class Datapoint {
- public:
-  Datapoint();
-  virtual ~Datapoint();
+static const char *const TAG = "vitoconnect";
 
-  void setAddress(uint16_t address) { this->_address = address; }
-  uint16_t getAddress() const { return this->_address; }
+VitoConnect::VitoConnect() : _optolink(nullptr) {}
 
-  void setLength(uint8_t length) { this->_length = length; }
-  uint8_t getLength() const { return this->_length; }
+void VitoConnect::setup() {
+  if (this->protocol_ == KW) {
+    _optolink = new OptolinkKW(this);
+  } else if (this->protocol_ == P300) {
+    _optolink = new OptolinkP300(this);
+  } else {
+    ESP_LOGW(TAG, "Unknown protocol.");
+  }
 
-  // 🆕 Polling-Intervall Setter/Getter
-  void setPollInterval(uint32_t interval) { this->_poll_interval = interval; }
-  uint32_t getPollInterval() const { return this->_poll_interval; }
+  _datapoints.shrink_to_fit();
 
-  void setLastUpdate(uint32_t t) { this->_last_update = t; }
-  uint32_t getLastUpdate() const { return this->_last_update; }
+  if (_optolink) {
+    _optolink->onData(&VitoConnect::_onData);
+    _optolink->onError(&VitoConnect::_onError);
+    _optolink->begin();
+  } else {
+    ESP_LOGW(TAG, "Not able to initialize VitoConnect");
+  }
+}
 
-  static void onData(std::function<void(uint8_t[], uint8_t, Datapoint* dp)> callback);
-  void onError(uint8_t, Datapoint* dp);
+void VitoConnect::register_datapoint(Datapoint *datapoint) {
+  ESP_LOGD(TAG, "Adding datapoint with address 0x%04X and length %d", datapoint->getAddress(),
+           datapoint->getLength());
+  this->_datapoints.push_back(datapoint);
+}
 
-  virtual void encode(uint8_t* raw, uint8_t length, void* data);
-  virtual void decode(uint8_t* data, uint8_t length, Datapoint* dp = nullptr);
+void VitoConnect::loop() {
+  if (_optolink) {
+    _optolink->loop();
+  }
+}
 
- protected:
-  uint16_t _address{0};
-  uint8_t _length{0};
+void VitoConnect::update() {
+  // Zyklische Abfrage mit individuellem Intervall
+  uint32_t now = millis();
 
-  // 🆕 Polling-Daten
-  uint32_t _poll_interval{60000};  // Standard: 60s
-  uint32_t _last_update{0};
+  for (Datapoint *dp : this->_datapoints) {
+    if (now - dp->getLastUpdate() >= dp->getPollInterval()) {
+      ESP_LOGD(TAG, "Requesting datapoint 0x%04X (len %d)", dp->getAddress(), dp->getLength());
 
-  static std::function<void(uint8_t[], uint8_t, Datapoint* dp)> _stdOnData;
-};
+      CbArg *arg = new CbArg(this, dp);
+      if (_optolink->read(dp->getAddress(), dp->getLength(), reinterpret_cast<void *>(arg))) {
+        dp->setLastUpdate(now);
+      } else {
+        delete arg;
+      }
+    }
+  }
+}
+
+void VitoConnect::_onData(uint8_t *data, uint8_t len, void *arg) {
+  CbArg *cbArg = reinterpret_cast<CbArg *>(arg);
+  cbArg->dp->decode(data, len, cbArg->dp);
+  delete cbArg;
+}
+
+void VitoConnect::_onError(uint8_t error, void *arg) {
+  ESP_LOGD(TAG, "Error received: %d", error);
+  CbArg *cbArg = reinterpret_cast<CbArg *>(arg);
+  if (cbArg->v->_onErrorCb)
+    cbArg->v->_onErrorCb(error, cbArg->dp);
+  delete cbArg;
+}
 
 }  // namespace vitoconnect
 }  // namespace esphome
