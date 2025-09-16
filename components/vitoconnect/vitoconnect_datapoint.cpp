@@ -23,28 +23,39 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
+
 #include "vitoconnect_datapoint.h"
+#include "esphome/core/log.h"
 
 namespace esphome {
 namespace vitoconnect {
 
+static const char *TAG = "vitoconnect.datapoint";
+
 std::function<void(uint8_t[], uint8_t, Datapoint* dp)> Datapoint::_stdOnData = nullptr;
 
-Datapoint::Datapoint(){
-  // empty
+Datapoint::Datapoint() {
+  _address = 0;
+  _length = 0;
+  _poll_interval = 60000;  // default 60s
+  _last_update = 0;
 }
 
 Datapoint::~Datapoint() {
-  // empty
+  // nothing to clean up
 }
 
 void Datapoint::onData(std::function<void(uint8_t[], uint8_t, Datapoint* dp)> callback) {
   _stdOnData = callback;
 }
 
+void Datapoint::onError(uint8_t error, Datapoint* dp) {
+  ESP_LOGW(TAG, "Error reading datapoint 0x%X: %d", dp->getAddress(), error);
+}
+
 void Datapoint::encode(uint8_t* raw, uint8_t length, void* data) {
   if (length != _length) {
-    // display error about length
+    ESP_LOGW(TAG, "Encode length mismatch for 0x%X: expected %d, got %d", _address, _length, length);
     memset(raw, 0, _length);
   } else {
     memcpy(raw, data, length);
@@ -52,16 +63,26 @@ void Datapoint::encode(uint8_t* raw, uint8_t length, void* data) {
 }
 
 void Datapoint::decode(uint8_t* data, uint8_t length, Datapoint* dp) {
-  uint8_t* output = new uint8_t[_length];
-  memset(output, 0, _length);
   if (length != _length) {
-    // display error about length
-  } else {
-    memcpy(output, data, length);
-    if (_stdOnData) _stdOnData(output, _length, dp);
+    ESP_LOGW(TAG, "Decode length mismatch for 0x%X: expected %d, got %d", _address, _length, length);
+    return;
   }
+
+  // Kopie der Daten
+  uint8_t* output = new uint8_t[_length];
+  memcpy(output, data, _length);
+
+  // Callback aufrufen
+  if (_stdOnData) {
+    _stdOnData(output, _length, dp);
+  }
+
   delete[] output;
+
+  // Update last_update-Zeit automatisch beim Decodieren
+  _last_update = millis();
 }
 
 }  // namespace vitoconnect
 }  // namespace esphome
+
