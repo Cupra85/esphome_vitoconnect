@@ -45,6 +45,11 @@ class Datapoint {
   void setLength(uint8_t length) {  this->_length = length; };
   uint8_t getLength() { return this->_length; };
 
+  void setPollInterval(uint32_t interval) { this->_poll_interval = interval; }
+  uint32_t getPollInterval() { return this->_poll_interval; }
+  bool shouldPoll(uint32_t now) { return this->(now - _last_poll >= _poll_interval); }
+  void markPolled(uint32_t now) { _last_poll = now; }
+
   static void onData(std::function<void(uint8_t[], uint8_t, Datapoint* dp)> callback);
   void onError(uint8_t, Datapoint* dp);
 
@@ -54,9 +59,12 @@ class Datapoint {
  protected:
   uint16_t _address;
   uint8_t _length;
+  uint32_t _poll_interval{60000};   // Default 60s
+  uint32_t _last_poll{0};
   static std::function<void(uint8_t[], uint8_t, Datapoint* dp)> _stdOnData;
 };
 
 
 }  // namespace vitoconnect
 }  // namespace esphome
+
