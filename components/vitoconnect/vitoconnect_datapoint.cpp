@@ -6,17 +6,6 @@ namespace vitoconnect {
 
 std::function<void(uint8_t[], uint8_t, Datapoint*)> Datapoint::_stdOnData = nullptr;
 
-Datapoint::Datapoint() {}
-Datapoint::~Datapoint() {}
-
-void Datapoint::onData(std::function<void(uint8_t[], uint8_t, Datapoint*)> callback) {
-  _stdOnData = callback;
-}
-
-void Datapoint::onError(uint8_t error, Datapoint* dp) {
-  // Fehlerbehandlung kann hier rein
-}
-
 void Datapoint::encode(uint8_t* raw, uint8_t length, void* data) {
   if (length != _length) {
     memset(raw, 0, _length);
@@ -28,13 +17,14 @@ void Datapoint::encode(uint8_t* raw, uint8_t length, void* data) {
 void Datapoint::decode(uint8_t* data, uint8_t length, Datapoint* dp) {
   uint8_t* output = new uint8_t[_length];
   memset(output, 0, _length);
+
   if (length == _length) {
     memcpy(output, data, length);
-    if (_stdOnData)
-      _stdOnData(output, _length, dp);
+    _last_update = esphome::millis();  // Updatezeit setzen
+    if (_stdOnData) _stdOnData(output, _length, dp);
   }
+
   delete[] output;
-  _last_update = millis();  // Updatezeit setzen
 }
 
 }  // namespace vitoconnect
