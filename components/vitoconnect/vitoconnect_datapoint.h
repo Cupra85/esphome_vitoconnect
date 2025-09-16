@@ -28,8 +28,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdint.h>
 #include <assert.h>
 #include <functional>
-#include <string.h>  // for memcpy
-#include "esphome/core/helpers.h"  // für millis()
+#include <string.h>   // for memcpy
+#include "esphome/core/helpers.h"  // millis()
 
 namespace esphome {
 namespace vitoconnect {
