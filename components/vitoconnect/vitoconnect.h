@@ -17,7 +17,6 @@ class VitoConnect : public PollingComponent {
 
   void register_datapoint(Datapoint* dp);
 
-  // Callbacks
   static void _onData(uint8_t* data, uint8_t len, void* arg);
   static void _onError(uint8_t error, void* arg);
 
@@ -27,3 +26,4 @@ class VitoConnect : public PollingComponent {
 
 }  // namespace vitoconnect
 }  // namespace esphome
+
