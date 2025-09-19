@@ -198,33 +198,30 @@ void OptolinkP300::_sentAck() {
 }
 
 void OptolinkP300::_receive() {
-  // Warte bis alle erwarteten Bytes da sind oder Timeout nach 300ms
+  // Timeout-Wartezeit, bis Daten kommen
   uint32_t start_time = millis();
-  while (_uart->available() < _rcvLen) {
-    if (millis() - start_time > 120) {  // Timeout verlängert auf 300ms
-      ESP_LOGE(TAG, "Reading from UART timed out at byte %u of %u!",
-               _uart->available(), _rcvLen);
+  while (_uart->available() == 0) {
+    if (millis() - start_time > 300) {   // Timeout nach 300ms
+      ESP_LOGE(TAG, "Reading from UART timed out, kein Byte empfangen");
       _tryOnError(TIMEOUT);
       _state = RECEIVE_ACK;
       return;
     }
-    yield();  // verhindert Blockieren des ESPHome-Loop
+    yield();
   }
 
-  // Wenn wir hier sind: alle erwarteten Bytes liegen im Puffer
-  while (_uart->available() != 0) {  // kompletten RX-Buffer einlesen
+  // vorhandene Schleife bleibt unverändert
+  while (_uart->available() != 0) {  // read complete RX buffer
     _rcvBuffer[_rcvBufferLen] = _uart->read();
     ++_rcvBufferLen;
     _lastMillis = millis();
+  
   }
-
-  if (_rcvBuffer[0] != 0x41) {
-    // warte auf Startbyte
-    return;
-  }
-
-  if (_rcvBufferLen == _rcvLen) {     // Nachricht komplett -> prüfen
-    if (_rcvBuffer[1] != (_rcvLen - 3)) {  // falsche Länge
+  // ESP_LOGD(TAG, "buffer fill: %02x", _rcvBuffer[_rcvBufferLen-1]);
+  // ESP_LOGD(TAG, "buffer fill: %d", _rcvBufferLen);
+  // ESP_LOGD(TAG, "buffer fill: %d", _rcvLen);
+  if (_rcvBufferLen == _rcvLen) {     // message complete, check message
+    if (_rcvBuffer[1] != (_rcvLen - 3)) {  // check for message length
       _tryOnError(LENGTH);
       _state = RECEIVE_ACK;
       return;
