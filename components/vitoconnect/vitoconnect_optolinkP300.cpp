@@ -248,8 +248,12 @@ void OptolinkP300::_receive() {
   } else if (_rcvBuffer[3] == 0x03) {
     _tryOnData(dp->data, dp->length);
   }
+void OptolinkP300::_receiveAck() {
+  const uint8_t buff[] = {0x06};
+  _uart->write_array(buff, sizeof(buff));
+  _lastMillis = millis();
+  _state = IDLE;
 
-  _state = RECEIVE_ACK;
 }
 // hier die Namespaces wieder korrekt schließen!
 }  // namespace vitoconnect
