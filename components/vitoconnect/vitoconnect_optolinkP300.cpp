@@ -251,3 +251,6 @@ void OptolinkP300::_receive() {
 
   _state = RECEIVE_ACK;
 }
+// hier die Namespaces wieder korrekt schließen!
+}  // namespace vitoconnect
+}  // namespace esphome
