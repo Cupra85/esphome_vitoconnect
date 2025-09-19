@@ -201,7 +201,7 @@ void OptolinkP300::_receive() {
   // Warte bis alle erwarteten Bytes verfügbar sind (Timeout 300ms)
   uint32_t start_time = millis();
   while (_uart->available() < _rcvLen) {
-    if (millis() - start_time > 300) {   // Timeout
+    if (millis() - start_time > 500) {   // Timeout
       ESP_LOGE(TAG, "Reading from UART timed out, got %u of %u bytes",
                _uart->available(), _rcvLen);
       _tryOnError(TIMEOUT);
