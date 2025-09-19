@@ -26,7 +26,15 @@ static const char *TAG = "vitoconnect";
 
 void VitoConnect::setup() {
 
-    this->check_uart_settings(4800, 2, uart::UART_CONFIG_PARITY_EVEN, 8);
+    auto* uart_device = new uart::UARTDevice(
+    2,          // UART Nummer
+    RX_PIN,     // RX Pin
+    TX_PIN,     // TX Pin
+    4800,       // Baudrate
+    512,        // RX-Puffergröße
+    uart::UART_CONFIG_PARITY_EVEN  // gerade Parität
+    );
+    this->set_uart(uart_device);
 
     ESP_LOGD(TAG, "Starting optolink with protocol: %s", this->protocol.c_str());
     if (this->protocol.compare("P300") == 0) {
@@ -91,3 +99,4 @@ void VitoConnect::_onError(uint8_t error, void* arg) {
 
 }  // namespace vitoconnect
 }  // namespace esphome
+
