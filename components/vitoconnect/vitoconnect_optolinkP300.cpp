@@ -209,7 +209,7 @@ void OptolinkP300::_receive() {
       _lastMillis = millis();
       last_rx_time = millis();  // Reset, da neues Byte angekommen
     } else {
-      if (millis() - last_rx_time > 300) {  // 300 ms ohne neues Byte
+      if (millis() - last_rx_time > 800) {  // 300 ms ohne neues Byte
         ESP_LOGE(TAG, "Reading from UART timed out, got %u of %u bytes",
                  _rcvBufferLen, _rcvLen);
         _tryOnError(TIMEOUT);
