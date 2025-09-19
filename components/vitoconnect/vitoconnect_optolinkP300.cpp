@@ -135,7 +135,7 @@ void OptolinkP300::_initAck() {
 
 void OptolinkP300::_idle() {
   // send INIT every 5 seconds to keep communication alive
-  if (millis() - _lastMillis > 5 * 1000UL) {
+  if (millis() - _lastMillis > 5 * 2000UL) {
     _state = INIT;
   }
   if (_queue.size() > 0) {
