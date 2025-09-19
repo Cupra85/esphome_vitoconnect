@@ -198,70 +198,56 @@ void OptolinkP300::_sentAck() {
 }
 
 void OptolinkP300::_receive() {
-  // Warte bis alle erwarteten Bytes verfügbar sind (Timeout 300ms)
   uint32_t start_time = millis();
-  while (_uart->available() < _rcvLen) {
-    if (millis() - start_time > 500) {   // Timeout
-      ESP_LOGE(TAG, "Reading from UART timed out, got %u of %u bytes",
-               _uart->available(), _rcvLen);
-      _tryOnError(TIMEOUT);
-      _state = RECEIVE_ACK;
-      return;
+  uint32_t last_rx_time = start_time;
+
+  // Bytes einlesen, bis komplette Nachricht da ist oder Timeout auftritt
+  while (_rcvBufferLen < _rcvLen) {
+    if (_uart->available()) {
+      _rcvBuffer[_rcvBufferLen] = _uart->read();
+      ++_rcvBufferLen;
+      _lastMillis = millis();
+      last_rx_time = millis();   // Reset, weil neues Byte angekommen
+    } else {
+      if (millis() - last_rx_time > 300) {  // 300 ms ohne neues Byte
+        ESP_LOGE(TAG, "Reading from UART timed out, got %u of %u bytes",
+                 _rcvBufferLen, _rcvLen);
+        _tryOnError(TIMEOUT);
+        _state = RECEIVE_ACK;
+        return;
+      }
+      yield();  // andere Tasks nicht blockieren
     }
-    yield();
   }
 
-  // danach alles aus dem RX-Puffer einlesen
-  while (_uart->available() != 0) {  // read complete RX buffer
-    _rcvBuffer[_rcvBufferLen] = _uart->read();
-    ++_rcvBufferLen;
-    _lastMillis = millis();
-  }
-
+  // Prüfen, ob Start-Byte korrekt ist
   if (_rcvBuffer[0] != 0x41) {
-    // wait for start byte
     return;
   }
 
-  if (_rcvBufferLen == _rcvLen) {     // message complete, check message
-    if (_rcvBuffer[1] != (_rcvLen - 3)) {  // check for message length
-      _tryOnError(LENGTH);
-      _state = RECEIVE_ACK;
-      return;
-    }
-    if (_rcvBuffer[2] != 0x01) {  // Vitotronic returns an error message
-      _tryOnError(VITO_ERROR);
-      _state = RECEIVE_ACK;
-      return;
-    }
-    if (!checkChecksum(_rcvBuffer, _rcvLen)) {  // checksum is wrong
-      _tryOnError(CRC);
-      _state = RECEIVE_ACK;  // TODO(@bertmelis): should we return NACK?
-      return;
-    }
-    OptolinkDP* dp = _queue.front();
-    if (_rcvBuffer[3] == 0x01) {
-      // message is from READ command, so returning read value
-      _tryOnData(&_rcvBuffer[7], dp->length);
-    } else if (_rcvBuffer[3] == 0x03) {
-      // message is from WRITE command, so returning written value
-      _tryOnData(dp->data, dp->length);
-    } else {
-      // should not be here
-    }
+  // Nachricht vollständig → prüfen
+  if (_rcvBuffer[1] != (_rcvLen - 3)) {
+    _tryOnError(LENGTH);
     _state = RECEIVE_ACK;
     return;
-  } else {
-    // not yet complete
   }
-}
+  if (_rcvBuffer[2] != 0x01) {
+    _tryOnError(VITO_ERROR);
+    _state = RECEIVE_ACK;
+    return;
+  }
+  if (!checkChecksum(_rcvBuffer, _rcvLen)) {
+    _tryOnError(CRC);
+    _state = RECEIVE_ACK;
+    return;
+  }
 
-void OptolinkP300::_receiveAck() {
-  const uint8_t buff[] = {0x06};
-  _uart->write_array(buff, sizeof(buff));
-  _lastMillis = millis();
-  _state = IDLE;
-}
+  OptolinkDP* dp = _queue.front();
+  if (_rcvBuffer[3] == 0x01) {
+    _tryOnData(&_rcvBuffer[7], dp->length);
+  } else if (_rcvBuffer[3] == 0x03) {
+    _tryOnData(dp->data, dp->length);
+  }
 
-}  // namespace vitoconnect
-}  // namespace esphome
+  _state = RECEIVE_ACK;
+}
