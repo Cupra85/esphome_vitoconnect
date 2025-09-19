@@ -201,13 +201,13 @@ void OptolinkP300::_receive() {
   uint32_t start_time = millis();
   uint32_t last_rx_time = start_time;
 
-  // Bytes einlesen, bis komplette Nachricht da ist oder Timeout auftritt
+  // Warte auf alle erwarteten Bytes mit dynamischem Timeout
   while (_rcvBufferLen < _rcvLen) {
     if (_uart->available()) {
       _rcvBuffer[_rcvBufferLen] = _uart->read();
       ++_rcvBufferLen;
       _lastMillis = millis();
-      last_rx_time = millis();   // Reset, weil neues Byte angekommen
+      last_rx_time = millis();  // Reset, da neues Byte angekommen
     } else {
       if (millis() - last_rx_time > 300) {  // 300 ms ohne neues Byte
         ESP_LOGE(TAG, "Reading from UART timed out, got %u of %u bytes",
@@ -216,45 +216,54 @@ void OptolinkP300::_receive() {
         _state = RECEIVE_ACK;
         return;
       }
-      yield();  // andere Tasks nicht blockieren
+      yield();  // ESPHome Loop nicht blockieren
     }
   }
 
-  // Prüfen, ob Start-Byte korrekt ist
+  // Prüfen, ob Startbyte korrekt ist
   if (_rcvBuffer[0] != 0x41) {
+    // wait for start byte
     return;
   }
 
   // Nachricht vollständig → prüfen
-  if (_rcvBuffer[1] != (_rcvLen - 3)) {
-    _tryOnError(LENGTH);
-    _state = RECEIVE_ACK;
-    return;
-  }
-  if (_rcvBuffer[2] != 0x01) {
-    _tryOnError(VITO_ERROR);
-    _state = RECEIVE_ACK;
-    return;
-  }
-  if (!checkChecksum(_rcvBuffer, _rcvLen)) {
-    _tryOnError(CRC);
-    _state = RECEIVE_ACK;
-    return;
-  }
+  if (_rcvBufferLen == _rcvLen) {
+    if (_rcvBuffer[1] != (_rcvLen - 3)) {
+      _tryOnError(LENGTH);
+      _state = RECEIVE_ACK;
+      return;
+    }
+    if (_rcvBuffer[2] != 0x01) {
+      _tryOnError(VITO_ERROR);
+      _state = RECEIVE_ACK;
+      return;
+    }
+    if (!checkChecksum(_rcvBuffer, _rcvLen)) {
+      _tryOnError(CRC);
+      _state = RECEIVE_ACK;
+      return;
+    }
 
-  OptolinkDP* dp = _queue.front();
-  if (_rcvBuffer[3] == 0x01) {
-    _tryOnData(&_rcvBuffer[7], dp->length);
-  } else if (_rcvBuffer[3] == 0x03) {
-    _tryOnData(dp->data, dp->length);
+    OptolinkDP* dp = _queue.front();
+    if (_rcvBuffer[3] == 0x01) {
+      _tryOnData(&_rcvBuffer[7], dp->length);
+    } else if (_rcvBuffer[3] == 0x03) {
+      _tryOnData(dp->data, dp->length);
+    }
+
+    _state = RECEIVE_ACK;
+    return;
+  } else {
+    // not yet complete
   }
+}
+
 void OptolinkP300::_receiveAck() {
   const uint8_t buff[] = {0x06};
   _uart->write_array(buff, sizeof(buff));
   _lastMillis = millis();
   _state = IDLE;
-
 }
-// hier die Namespaces wieder korrekt schließen!
+
 }  // namespace vitoconnect
 }  // namespace esphome
