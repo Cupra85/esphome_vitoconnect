@@ -22,7 +22,7 @@ class VitoConnect : public uart::UARTDevice, public PollingComponent {
     void loop() override;
     void update() override;
 
-    void set_protocol(std::string protocol) { this->protocol = protocol; }
+    void set_protocol(const std::string &p) { protocol = p; }
     void register_datapoint(Datapoint *datapoint);
 
     void onData(std::function<void(const uint8_t* data, uint8_t length, Datapoint* dp)> callback);
@@ -31,7 +31,23 @@ class VitoConnect : public uart::UARTDevice, public PollingComponent {
     // ADDED: zentrale Schreibfunktion für switch, number, output
     bool write(Datapoint* datapoint, uint8_t* value, uint8_t len);
 
- protected:
-
  private:
+    std::string protocol;
     Optolink* _optolink{nullptr};
+    std::vector<Datapoint*> _datapoints;
+
+    struct CbArg {
+      CbArg(VitoConnect* vw, Datapoint* d) :
+        v(vw),
+        dp(d) {}
+      VitoConnect* v;
+      Datapoint* dp;
+    };
+    static void _onData(uint8_t* data, uint8_t len, void* arg);
+    static void _onError(uint8_t error, void* arg);
+
+    std::function<void(uint8_t, Datapoint*)> _onErrorCb;
+};
+
+}  // namespace vitoconnect
+}  // namespace esphome
