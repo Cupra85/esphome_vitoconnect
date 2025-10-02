@@ -90,3 +90,4 @@ void VitoConnect::_onError(uint8_t error, void* arg) {
 
 }  // namespace vitoconnect
 }  // namespace esphome
+
