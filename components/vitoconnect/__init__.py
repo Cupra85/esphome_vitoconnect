@@ -4,9 +4,7 @@ from esphome.components import uart
 from esphome.const import CONF_ID, CONF_PROTOCOL, CONF_UPDATE_INTERVAL
 
 CODEOWNERS = ["@dannerph"]
-
 DEPENDENCIES = ["uart"]
-
 MULTI_CONF = True
 
 vitoconnect_ns = cg.esphome_ns.namespace("vitoconnect")
@@ -37,3 +35,8 @@ async def to_code(config):
     await uart.register_uart_device(var, config)
     cg.add(var.set_protocol(config[CONF_PROTOCOL]))
     cg.add(var.set_update_interval(config[CONF_UPDATE_INTERVAL]))
+
+# ADDED: neue Plattformen registrieren
+VitoconnectSwitch = vitoconnect_ns.class_("VitoconnectSwitch", cg.Component)
+VitoconnectNumber = vitoconnect_ns.class_("VitoconnectNumber", cg.Component)
+VitoconnectOutput = vitoconnect_ns.class_("VitoconnectOutput", cg.Component)
