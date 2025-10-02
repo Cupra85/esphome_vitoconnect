@@ -25,6 +25,7 @@ namespace vitoconnect {
 static const char *TAG = "vitoconnect";
 
 void VitoConnect::setup() {
+
     this->check_uart_settings(4800, 2, uart::UART_CONFIG_PARITY_EVEN, 8);
 
     ESP_LOGD(TAG, "Starting optolink with protocol: %s", this->protocol.c_str());
@@ -36,12 +37,18 @@ void VitoConnect::setup() {
       ESP_LOGW(TAG, "Unknown protocol.");
     }
 
+    // optimize datapoint list
     _datapoints.shrink_to_fit();
 
     if (_optolink) {
+
+      // add onData and onError callbacks
       _optolink->onData(&VitoConnect::_onData);
       _optolink->onError(&VitoConnect::_onError);
+      
+      // set initial state
       _optolink->begin();
+
     } else {
       ESP_LOGW(TAG, "Not able to initialize VitoConnect");
     }
@@ -53,39 +60,33 @@ void VitoConnect::register_datapoint(Datapoint *datapoint) {
 }
 
 void VitoConnect::loop() {
-    if (_optolink) _optolink->loop();
+    _optolink->loop();
 }
 
 void VitoConnect::update() {
-    ESP_LOGD(TAG, "Schedule sensor update");
-
-    for (Datapoint* dp : this->_datapoints) {
-        CbArg* arg = new CbArg(this, dp);
-        if (!_optolink->read(dp->getAddress(), dp->getLength(), reinterpret_cast<void*>(arg))) {
-            delete arg;
-        }
-    }
-}
-
-// ADDED: zentrale Schreibfunktion mit korrekt typisiertem Pointer
-bool VitoConnect::write(Datapoint* datapoint, uint8_t* value, uint8_t len) {
-    if (_optolink) {
-        return _optolink->write(datapoint->getAddress(), len, value, nullptr);
-    }
-    return false;
+  // This will be called every "update_interval" milliseconds.
+  ESP_LOGD(TAG, "Schedule sensor update");
+  
+  for (Datapoint* dp : this->_datapoints) {
+      CbArg* arg = new CbArg(this, dp);   
+      if (_optolink->read(dp->getAddress(), dp->getLength(), reinterpret_cast<void*>(arg))) {
+      } else {
+          delete arg;
+      }
+  }
 }
 
 void VitoConnect::_onData(uint8_t* data, uint8_t len, void* arg) {
-    CbArg* cbArg = reinterpret_cast<CbArg*>(arg);
-    cbArg->dp->decode(data, len, cbArg->dp);
-    delete cbArg;
+  CbArg* cbArg = reinterpret_cast<CbArg*>(arg);
+  cbArg->dp->decode(data, len, cbArg->dp);
+  delete cbArg;
 }
 
 void VitoConnect::_onError(uint8_t error, void* arg) {
-    ESP_LOGD(TAG, "Error received: %d", error);
-    CbArg* cbArg = reinterpret_cast<CbArg*>(arg);
-    if (cbArg->v->_onErrorCb) cbArg->v->_onErrorCb(error, cbArg->dp);
-    delete cbArg;
+  ESP_LOGD(TAG, "Error received: %d", error);
+  CbArg* cbArg = reinterpret_cast<CbArg*>(arg);
+  if (cbArg->v->_onErrorCb) cbArg->v->_onErrorCb(error, cbArg->dp);
+  delete cbArg;
 }
 
 }  // namespace vitoconnect
