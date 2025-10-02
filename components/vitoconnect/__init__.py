@@ -1,6 +1,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import uart, switch, number, output
+from esphome.components import uart, switch, number as number_, output
 from esphome.const import CONF_ID, CONF_PROTOCOL, CONF_UPDATE_INTERVAL
 
 CODEOWNERS = ["@dannerph"]
@@ -38,5 +38,5 @@ async def to_code(config):
 
 # ADDED: neue Plattformen registrieren
 VitoconnectSwitch = vitoconnect_ns.class_("VitoconnectSwitch", switch.Switch)
-VitoconnectNumber = vitoconnect_ns.class_("VitoconnectNumber", number.Number)
+VitoconnectNumber = vitoconnect_ns.class_("VitoconnectNumber", number_.Number_)
 VitoconnectOutput = vitoconnect_ns.class_("VitoconnectOutput", output.FloatOutput)
