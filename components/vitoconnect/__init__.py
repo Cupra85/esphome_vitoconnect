@@ -1,10 +1,12 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import uart, switch, number as number_, output
+from esphome.components import uart
 from esphome.const import CONF_ID, CONF_PROTOCOL, CONF_UPDATE_INTERVAL
 
 CODEOWNERS = ["@dannerph"]
+
 DEPENDENCIES = ["uart"]
+
 MULTI_CONF = True
 
 vitoconnect_ns = cg.esphome_ns.namespace("vitoconnect")
@@ -14,7 +16,7 @@ CONF_VITOCONNECT_ID = "vitoconnect_id"
 
 OPTOLINK_PROTOCOL = {
     "P300": "P300",
-    "KW": "KW",
+    "KW":"KW",
 }
 
 CONFIG_SCHEMA = (
@@ -35,8 +37,3 @@ async def to_code(config):
     await uart.register_uart_device(var, config)
     cg.add(var.set_protocol(config[CONF_PROTOCOL]))
     cg.add(var.set_update_interval(config[CONF_UPDATE_INTERVAL]))
-
-# ADDED: neue Plattformen registrieren
-VitoconnectSwitch = vitoconnect_ns.class_("VitoconnectSwitch", switch.Switch)
-VitoconnectNumber = vitoconnect_ns.class_("VitoconnectNumber", number_.Number_)
-VitoconnectOutput = vitoconnect_ns.class_("VitoconnectOutput", output.FloatOutput)
