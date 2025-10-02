@@ -28,7 +28,7 @@ class VitoConnect : public uart::UARTDevice, public PollingComponent {
     void onData(std::function<void(const uint8_t* data, uint8_t length, Datapoint* dp)> callback);
     void onError(std::function<void(uint8_t, Datapoint*)> callback);
 
-    // ADDED: Schreibfunktion für switch, number, output
+    // ADDED: zentrale Schreibfunktion für switch, number, output
     bool write(Datapoint* datapoint, uint8_t* value, uint8_t len);
 
  protected:
