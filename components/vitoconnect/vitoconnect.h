@@ -35,21 +35,3 @@ class VitoConnect : public uart::UARTDevice, public PollingComponent {
 
  private:
     Optolink* _optolink{nullptr};
-    std::vector<Datapoint*> _datapoints;
-    std::string protocol;
-
-    struct CbArg {
-      CbArg(VitoConnect* vw, Datapoint* d) :
-        v(vw),
-        dp(d) {}
-      VitoConnect* v;
-      Datapoint* dp;
-    };
-    static void _onData(uint8_t* data, uint8_t len, void* arg);
-    static void _onError(uint8_t error, void* arg);
-
-    std::function<void(uint8_t, Datapoint*)> _onErrorCb;
-};
-
-}  // namespace vitoconnect
-}  // namespace esphome
