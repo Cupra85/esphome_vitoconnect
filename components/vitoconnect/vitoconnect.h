@@ -23,7 +23,6 @@
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/uart/uart_component.h"
 #include "esphome/components/sensor/sensor.h"
-// #include "vitoconnect_DP.h"
 #include "vitoconnect_optolink.h"
 #include "vitoconnect_optolinkP300.h"
 #include "vitoconnect_optolinkKW.h"
@@ -34,15 +33,10 @@ using namespace std;
 namespace esphome {
 namespace vitoconnect {
 
-/**
- * @brief VitoConnect manages the esphome components, their datapoints and optolink to your Viessmann device.
- * 
- */
 class VitoConnect : public uart::UARTDevice, public PollingComponent {
-  public:
-
+ public:
     VitoConnect() : PollingComponent(0) {}
-    
+
     void setup() override;
     void loop() override;
     void update() override;
@@ -53,27 +47,16 @@ class VitoConnect : public uart::UARTDevice, public PollingComponent {
     void onData(std::function<void(const uint8_t* data, uint8_t length, Datapoint* dp)> callback);
     void onError(std::function<void(uint8_t, Datapoint*)> callback);
 
-    /**
-     * @brief Enqueue a datapoint for writing.
-     * 
-     * The onData callback will be launched on success.
-     * 
-     * @tparam D Type of datapoint (inherited from class `Datapoint`)
-     * @tparam T Type of the value to be written
-     * @param datapoint Datapoint to be read, passed by reference.
-     * @param value Value to be written
-     * @return true Enqueueing was successful
-     * @return false Enqueueing failed (eg. queue full)
-     */
-    // template<class D, typename T>
-    // bool write(D& datapoint, T value);  // NOLINT todo: make it a const ref or pointer?
+    // ADDED: Schreibfunktion für switch, number, output
+    bool write(Datapoint* datapoint, const uint8_t* value, uint8_t len);
 
-  protected:
+ protected:
 
-  private:
-    Optolink* _optolink;
+ private:
+    Optolink* _optolink{nullptr};
     std::vector<Datapoint*> _datapoints;
     std::string protocol;
+
     struct CbArg {
       CbArg(VitoConnect* vw, Datapoint* d) :
         v(vw),
