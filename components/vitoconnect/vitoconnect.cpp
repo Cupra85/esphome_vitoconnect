@@ -67,7 +67,7 @@ void VitoConnect::update() {
     }
 }
 
-// ADDED: zentrale Schreibfunktion mit korrektem uint8_t* Typ
+// ADDED: zentrale Schreibfunktion mit korrekt typisiertem Pointer
 bool VitoConnect::write(Datapoint* datapoint, uint8_t* value, uint8_t len) {
     if (_optolink) {
         return _optolink->write(datapoint->getAddress(), len, value, nullptr);
