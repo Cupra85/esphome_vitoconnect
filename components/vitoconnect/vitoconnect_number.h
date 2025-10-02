@@ -1,12 +1,12 @@
 #pragma once
 
-#include "esphome/components/number/number.h"
+#include "esphome/components/number/number_.h"
 #include "vitoconnect.h"
 
 namespace esphome {
 namespace vitoconnect {
 
-class VitoconnectNumber : public number::Number {
+class VitoconnectNumber : public number_::Number_ {
  public:
   void set_parent(VitoConnect *parent, Datapoint* dp) { this->parent_ = parent; this->dp_ = dp; }
 
