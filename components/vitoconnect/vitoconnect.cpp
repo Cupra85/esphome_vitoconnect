@@ -25,6 +25,7 @@ namespace vitoconnect {
 static const char *TAG = "vitoconnect";
 
 void VitoConnect::setup() {
+    _optolink = nullptr;
 
     this->check_uart_settings(4800, 2, uart::UART_CONFIG_PARITY_EVEN, 8);
 
@@ -95,9 +96,10 @@ void VitoConnect::_onData(uint8_t* data, uint8_t len, void* arg) {
     } else {
       cbArg->v->_pending_readbacks.push_back(cbArg->dp);
     }
-  } else {
-    cbArg->dp->decode(data, len, cbArg->dp);
+    delete cbArg;
+    return;
   }
+  cbArg->dp->decode(data, len, cbArg->dp);
   delete cbArg;
 }
 

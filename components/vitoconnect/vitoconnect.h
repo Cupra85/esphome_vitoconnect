@@ -72,7 +72,7 @@ class VitoConnect : public uart::UARTDevice, public PollingComponent {
   protected:
 
   private:
-    Optolink* _optolink{nullptr};
+    Optolink* _optolink;
     std::vector<Datapoint*> _datapoints;
     std::vector<Datapoint*> _pending_readbacks;
     std::string protocol;
