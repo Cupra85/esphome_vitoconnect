@@ -49,6 +49,7 @@ class VitoConnect : public uart::UARTDevice, public PollingComponent {
 
     void set_protocol(std::string protocol) { this->protocol = protocol; }
     void register_datapoint(Datapoint *datapoint);
+    bool write_datapoint(Datapoint *datapoint, uint16_t address, uint8_t *data, uint8_t length);
 
     void onData(std::function<void(const uint8_t* data, uint8_t length, Datapoint* dp)> callback);
     void onError(std::function<void(uint8_t, Datapoint*)> callback);
@@ -73,6 +74,7 @@ class VitoConnect : public uart::UARTDevice, public PollingComponent {
   private:
     Optolink* _optolink;
     std::vector<Datapoint*> _datapoints;
+    std::vector<Datapoint*> _pending_readbacks;
     std::string protocol;
     struct CbArg {
       CbArg(VitoConnect* vw, Datapoint* d) :
@@ -80,6 +82,7 @@ class VitoConnect : public uart::UARTDevice, public PollingComponent {
         dp(d) {}
       VitoConnect* v;
       Datapoint* dp;
+      bool is_write{false};
     };
     static void _onData(uint8_t* data, uint8_t len, void* arg);
     static void _onError(uint8_t error, void* arg);

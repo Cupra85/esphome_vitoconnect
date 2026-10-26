@@ -1,0 +1,21 @@
+name: ESP-IDF build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  esp32c6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install ESPHome
+        run: python -m pip install esphome==2026.10.0
+      - name: Validate ESP32-C6 configuration
+        run: esphome config tests/esp32c6_write.yaml
+      - name: Compile ESP-IDF firmware
+        run: esphome compile tests/esp32c6_write.yaml

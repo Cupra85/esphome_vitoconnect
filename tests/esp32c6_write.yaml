@@ -1,0 +1,63 @@
+# Compile-only fixture. Addresses are placeholders and must never be flashed as heater settings.
+esphome:
+  name: vitoconnect-write-ci
+
+esp32:
+  board: esp32-c6-devkitc-1
+  framework:
+    type: esp-idf
+
+logger:
+
+uart:
+  id: vito_uart
+  rx_pin: GPIO4
+  tx_pin: GPIO5
+  baud_rate: 4800
+  data_bits: 8
+  parity: EVEN
+  stop_bits: 2
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [vitoconnect]
+
+vitoconnect:
+  id: vito
+  uart_id: vito_uart
+  protocol: P300
+  update_interval: 30s
+
+sensor:
+  - platform: vitoconnect
+    name: CI Read Sensor
+    address: 0x1003
+    length: 1
+
+number:
+  - platform: vitoconnect
+    name: CI Write Number
+    address: 0x1000
+    length: 1
+    min_value: 0
+    max_value: 100
+    step: 1
+
+select:
+  - platform: vitoconnect
+    name: CI Write Select
+    address: 0x1001
+    length: 1
+    options:
+      0: "Off"
+      1: "On"
+
+switch:
+  - platform: vitoconnect
+    name: CI Write Switch
+    address: 0x1002
+    length: 1
+    on_value: 1
+    off_value: 0

@@ -9,7 +9,7 @@ Address, length and post processing can be retrieved from <https://github.com/op
 
 ```yaml
 external_components:
-  - source: github://dannerph/esphome_vitoconnect
+  - source: github://Cupra85/esphome_vitoconnect
 
 esphome:
   name: viessmann-reader
@@ -78,6 +78,20 @@ binary_sensor:
 
 Tested with OptoLink ESP32 adapter from here:
 <https://github.com/openv/openv/wiki/Bauanleitung-ESP32-Adafruit-Feather-Huzzah32-and-Proto-Wing>
+
+## Writable values (ESP-IDF)
+
+This fork also provides native ESPHome `number`, `select`, and `switch` platforms under the existing `vitoconnect` name. The ESP32-C6 build uses `framework: {type: esp-idf}`. Existing sensors and binary sensors keep their behavior.
+
+A control command queues an Optolink write. The entity state is updated only from a subsequent read of the device; a failed write does not publish the requested value. No value is written during startup. Use only addresses and byte lengths that are confirmed writable for your exact controller. The `tests/esp32c6_write.yaml` addresses are compile-only placeholders and must not be flashed to a heater.
+
+All three platforms require `address` (write address) and accept `state_address` (read address, defaults to `address`). Both use the same `length`. Supported widths are 1 or 2 bytes for `select` and `switch`, and 1, 2 or 4 bytes for `number`.
+
+- `number`: set `min_value`, `max_value`, and `step`; optional `scale` converts a raw integer to the displayed value (default 1), and `signed` enables signed two's-complement values (default false).
+- `select`: configure `options` as a mapping from raw integer to unique display label.
+- `switch`: optional `on_value` and `off_value` default to 1 and 0. Startup restoration is disabled, so reconnecting cannot replay an old switch value.
+
+The ESP32-C6 build test validates the existing sensor and all three writable platforms with ESP-IDF. It compiles firmware only; it does not connect to or write to a heating device.
 
 ## Credits
 
