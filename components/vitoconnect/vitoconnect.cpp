@@ -133,3 +133,4 @@ bool VitoConnect::write_datapoint(Datapoint *datapoint, uint16_t address, uint8_
 }  // namespace vitoconnect
 }  // namespace esphome
 
+
