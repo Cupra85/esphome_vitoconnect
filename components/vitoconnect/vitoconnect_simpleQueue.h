@@ -147,6 +147,29 @@ SimpleQueue(const SimpleQueue& obj)
     return _count;
   }
 
+  /** Insert a request after the active item and any earlier priority items. */
+  template <typename IsPriority>
+  bool pushPriority(T t, IsPriority is_priority) {
+    if (_count >= _size) return false;
+    if (_count == 0) return push(t);
+
+    size_t offset = 1;  // The front item may already be in flight.
+    while (offset < _count && is_priority(_buffer[(_firstPosition + offset) % _size])) {
+      ++offset;
+    }
+    const size_t insert = (_firstPosition + offset) % _size;
+    size_t pos = _nextPosition;
+    while (pos != insert) {
+      const size_t previous = pos == 0 ? _size - 1 : pos - 1;
+      _buffer[pos] = _buffer[previous];
+      pos = previous;
+    }
+    _buffer[insert] = t;
+    _nextPosition = (_nextPosition + 1) % _size;
+    ++_count;
+    return true;
+  }
+
  private:
   T* _buffer;
   size_t _firstPosition;

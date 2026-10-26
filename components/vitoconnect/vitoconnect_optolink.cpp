@@ -61,6 +61,7 @@ bool Optolink::read(uint16_t address, uint8_t length, void* arg) {
 
 bool Optolink::write(uint16_t address, uint8_t length, uint8_t* data, void* arg) {
   OptolinkDP dp(address, length, true, data, arg);
+  if (_queue.pushPriority(dp, [](const OptolinkDP& queued) { return queued.write; })) return true;
   return _queue.push(dp);
 }
 
