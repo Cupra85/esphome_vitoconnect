@@ -157,6 +157,9 @@ class Optolink {
    */
   bool read(uint16_t address, uint8_t length, void* arg = nullptr);
 
+  /** Queue a read-back ahead of routine reads, without interrupting the active request or queued writes. */
+  bool readPriority(uint16_t address, uint8_t length, void* arg = nullptr);
+
   /**
    * @brief Write to a datapoint with specified properties
    * 
