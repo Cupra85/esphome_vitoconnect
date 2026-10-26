@@ -60,12 +60,23 @@ void VitoConnect::register_datapoint(Datapoint *datapoint) {
 }
 
 void VitoConnect::loop() {
+    if (_optolink == nullptr) return;
     _optolink->loop();
+    while (!_pending_readbacks.empty()) {
+      Datapoint *dp = _pending_readbacks.front();
+      CbArg *arg = new CbArg(this, dp);
+      if (!_optolink->read(dp->getAddress(), dp->getLength(), arg)) {
+        delete arg;
+        break;
+      }
+      _pending_readbacks.erase(_pending_readbacks.begin());
+    }
 }
 
 void VitoConnect::update() {
   // This will be called every "update_interval" milliseconds.
   ESP_LOGD(TAG, "Schedule sensor update");
+  if (_optolink == nullptr) return;
   
   for (Datapoint* dp : this->_datapoints) {
       CbArg* arg = new CbArg(this, dp);   
@@ -78,7 +89,15 @@ void VitoConnect::update() {
 
 void VitoConnect::_onData(uint8_t* data, uint8_t len, void* arg) {
   CbArg* cbArg = reinterpret_cast<CbArg*>(arg);
-  cbArg->dp->decode(data, len, cbArg->dp);
+  if (cbArg->is_write) {
+    if (cbArg->v->protocol == "KW" && (data == nullptr || len != 1 || data[0] != 0x00)) {
+      ESP_LOGW(TAG, "KW write was not acknowledged");
+    } else {
+      cbArg->v->_pending_readbacks.push_back(cbArg->dp);
+    }
+  } else {
+    cbArg->dp->decode(data, len, cbArg->dp);
+  }
   delete cbArg;
 }
 
@@ -87,6 +106,21 @@ void VitoConnect::_onError(uint8_t error, void* arg) {
   CbArg* cbArg = reinterpret_cast<CbArg*>(arg);
   if (cbArg->v->_onErrorCb) cbArg->v->_onErrorCb(error, cbArg->dp);
   delete cbArg;
+}
+
+bool VitoConnect::write_datapoint(Datapoint *datapoint, uint16_t address, uint8_t *data, uint8_t length) {
+  if (_optolink == nullptr || datapoint == nullptr || data == nullptr || length == 0 || length > MAX_DP_LENGTH) {
+    ESP_LOGW(TAG, "Invalid write request for address 0x%04X", address);
+    return false;
+  }
+  CbArg *arg = new CbArg(this, datapoint);
+  arg->is_write = true;
+  if (!_optolink->write(address, length, data, arg)) {
+    delete arg;
+    ESP_LOGW(TAG, "Write queue full for address 0x%04X", address);
+    return false;
+  }
+  return true;
 }
 
 }  // namespace vitoconnect
