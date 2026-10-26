@@ -66,6 +66,11 @@ void VitoConnect::loop() {
     while (!_pending_readbacks.empty()) {
       Datapoint *dp = _pending_readbacks.front();
       CbArg *arg = new CbArg(this, dp);
+      // Confirm a write before the remaining routine sensor reads.
+      if (_optolink->readPriority(dp->getAddress(), dp->getLength(), arg)) {
+        _pending_readbacks.erase(_pending_readbacks.begin());
+        continue;
+      }
       if (!_optolink->read(dp->getAddress(), dp->getLength(), arg)) {
         delete arg;
         break;
@@ -127,5 +132,4 @@ bool VitoConnect::write_datapoint(Datapoint *datapoint, uint16_t address, uint8_
 
 }  // namespace vitoconnect
 }  // namespace esphome
-
 
