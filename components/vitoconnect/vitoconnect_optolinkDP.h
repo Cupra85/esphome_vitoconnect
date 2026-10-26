@@ -72,6 +72,8 @@ class OptolinkDP {
    */
   OptolinkDP(const OptolinkDP& obj);
 
+  OptolinkDP& operator=(const OptolinkDP& obj);
+
   /**
    * @brief Destroy the OptolinkDP object
    * 
