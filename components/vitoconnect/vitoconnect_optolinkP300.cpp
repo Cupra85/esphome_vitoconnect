@@ -247,8 +247,13 @@ void OptolinkP300::_receive() {
     OptolinkDP* dp = _queue.front();
     if (_rcvBuffer[3] == 0x01) {
       _tryOnData(&_rcvBuffer[7], dp->length);
+    } else if (_rcvBuffer[3] == 0x02 && dp->write) {
+      // The VBC550P answers a P300 write with function code 0x02.
+      _tryOnData(dp->data, dp->length);
     } else if (_rcvBuffer[3] == 0x03) {
       _tryOnData(dp->data, dp->length);
+    } else {
+      _tryOnError(VITO_ERROR);
     }
 
     _state = RECEIVE_ACK;
