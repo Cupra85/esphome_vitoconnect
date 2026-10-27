@@ -77,16 +77,32 @@ void VitoConnect::loop() {
       }
       _pending_readbacks.erase(_pending_readbacks.begin());
     }
+
+    // Poll datapoints with their own update_interval independently of the hub timer.
+    const uint32_t now = millis();
+    for (Datapoint *dp : this->_datapoints) {
+      if (dp->get_poll_interval() == 0 || !dp->poll_due(now)) continue;
+      CbArg *arg = new CbArg(this, dp);
+      if (_optolink->read(dp->getAddress(), dp->getLength(), arg)) {
+        dp->note_poll(now);
+      } else {
+        delete arg;
+      }
+    }
 }
 
 void VitoConnect::update() {
   // This will be called every "update_interval" milliseconds.
   ESP_LOGD(TAG, "Schedule sensor update");
   if (_optolink == nullptr) return;
-  
+
+  const uint32_t now = millis();
   for (Datapoint* dp : this->_datapoints) {
-      CbArg* arg = new CbArg(this, dp);   
-      if (_optolink->read(dp->getAddress(), dp->getLength(), reinterpret_cast<void*>(arg))) {
+      // Datapoints with a custom interval only need their initial read here.
+      if (dp->get_poll_interval() != 0 && dp->poll_started()) continue;
+      CbArg* arg = new CbArg(this, dp);
+      if (_optolink->read(dp->getAddress(), dp->getLength(), arg)) {
+          if (dp->get_poll_interval() != 0) dp->note_poll(now);
       } else {
           delete arg;
       }
@@ -132,5 +148,3 @@ bool VitoConnect::write_datapoint(Datapoint *datapoint, uint16_t address, uint8_
 
 }  // namespace vitoconnect
 }  // namespace esphome
-
-
