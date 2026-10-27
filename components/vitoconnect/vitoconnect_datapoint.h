@@ -45,6 +45,14 @@ class Datapoint {
   void setLength(uint8_t length) {  this->_length = length; };
   uint8_t getLength() { return this->_length; };
 
+  void set_poll_interval(uint32_t interval_ms) { this->_poll_interval_ms = interval_ms; }
+  uint32_t get_poll_interval() const { return this->_poll_interval_ms; }
+  bool poll_started() const { return this->_poll_started; }
+  bool poll_due(uint32_t now) const {
+    return this->_poll_started && static_cast<uint32_t>(now - this->_last_poll_ms) >= this->_poll_interval_ms;
+  }
+  void note_poll(uint32_t now) { this->_last_poll_ms = now; this->_poll_started = true; }
+
   static void onData(std::function<void(uint8_t[], uint8_t, Datapoint* dp)> callback);
   void onError(uint8_t, Datapoint* dp);
 
@@ -54,6 +62,9 @@ class Datapoint {
  protected:
   uint16_t _address;
   uint8_t _length;
+  uint32_t _poll_interval_ms{0};  // 0 means use the hub update_interval.
+  uint32_t _last_poll_ms{0};
+  bool _poll_started{false};
   static std::function<void(uint8_t[], uint8_t, Datapoint* dp)> _stdOnData;
 };
 
