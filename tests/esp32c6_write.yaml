@@ -72,3 +72,10 @@ switch:
     length: 1
     on_value: 1
     off_value: 0
+
+button:
+  - platform: vitoconnect
+    name: CI Write Button
+    address: 0x1006
+    length: 2
+    value: 4660

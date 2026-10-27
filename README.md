@@ -96,17 +96,29 @@ The `vitoconnect` hub's `update_interval` still controls entities without their 
 
 ## Writable values (ESP-IDF)
 
-This fork also provides native ESPHome `number`, `select`, and `switch` platforms under the existing `vitoconnect` name. The ESP32-C6 build uses `framework: {type: esp-idf}`. Existing sensors and binary sensors keep their behavior.
+This fork provides native ESPHome `number`, `select`, `switch`, and `button` platforms under the existing `vitoconnect` name. The ESP32-C6 build uses `framework: {type: esp-idf}`. Existing sensors and binary sensors keep their behavior.
 
-A control command queues an Optolink write. The entity state is updated only from a subsequent read of the device; a failed write does not publish the requested value. No value is written during startup. Use only addresses and byte lengths that are confirmed writable for your exact controller. The `tests/esp32c6_write.yaml` addresses are compile-only placeholders and must not be flashed to a heater.
+A control command queues an Optolink write. For `number`, `select`, and `switch`, the entity state is updated only from a subsequent read of the device; a failed write does not publish the requested value. A `button` sends its configured raw value once when pressed and has no state or readback. No value is written during startup. Use only addresses and byte lengths that are confirmed writable for your exact controller. The `tests/esp32c6_write.yaml` addresses are compile-only placeholders and must not be flashed to a heater.
 
-All three platforms require `address` (write address) and accept `state_address` (read address, defaults to `address`). Both use the same `length`. Supported widths are 1 or 2 bytes for `select` and `switch`, and 1, 2 or 4 bytes for `number`.
+`number`, `select`, and `switch` require `address` (write address) and accept `state_address` (read address, defaults to `address`). Both use the same `length`. Supported widths are 1 or 2 bytes for `select` and `switch`, and 1, 2 or 4 bytes for `number`.
 
 - `number`: set `min_value`, `max_value`, and `step`; optional `scale` converts a raw integer to the displayed value (default 1), and `signed` enables signed two's-complement values (default false).
 - `select`: configure `options` as a mapping from raw integer to unique display label.
 - `switch`: optional `on_value` and `off_value` default to 1 and 0. Startup restoration is disabled, so reconnecting cannot replay an old switch value.
+- `button`: set `address` and `value` (unsigned raw integer). Optional `length` defaults to 1 byte; 1, 2 and 4 bytes are supported. The value must fit the selected length. The button is never polled and sends exactly one write per press.
 
-The ESP32-C6 build test validates the existing sensor and all three writable platforms with ESP-IDF. It compiles firmware only; it does not connect to or write to a heating device.
+Example button configuration; replace the placeholder address and value with a confirmed write command before using it on a device:
+
+```yaml
+button:
+  - platform: vitoconnect
+    name: "Example write command"
+    address: 0x1006  # Placeholder, not a heater address
+    length: 1
+    value: 1
+```
+
+The ESP32-C6 build test validates the existing sensor and all four writable platforms with ESP-IDF. It compiles firmware only; it does not connect to or write to a heating device.
 
 ## Credits
 
