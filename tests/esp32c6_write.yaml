@@ -45,7 +45,6 @@ binary_sensor:
   - platform: vitoconnect
     name: CI Slow Binary Sensor
     address: 0x1005
-    length: 1
     update_interval: 45s
 
 number:
