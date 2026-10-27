@@ -50,6 +50,8 @@ class VitoConnect : public uart::UARTDevice, public PollingComponent {
     void set_protocol(std::string protocol) { this->protocol = protocol; }
     void register_datapoint(Datapoint *datapoint);
     bool write_datapoint(Datapoint *datapoint, uint16_t address, uint8_t *data, uint8_t length);
+    // Queue a one-shot command without a state readback.
+    bool write_command(uint16_t address, uint8_t *data, uint8_t length);
 
     void onData(std::function<void(const uint8_t* data, uint8_t length, Datapoint* dp)> callback);
     void onError(std::function<void(uint8_t, Datapoint*)> callback);
