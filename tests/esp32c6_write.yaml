@@ -35,6 +35,18 @@ sensor:
     name: CI Read Sensor
     address: 0x1003
     length: 1
+  - platform: vitoconnect
+    name: CI Slow Read Sensor
+    address: 0x1004
+    length: 1
+    update_interval: 120s
+
+binary_sensor:
+  - platform: vitoconnect
+    name: CI Slow Binary Sensor
+    address: 0x1005
+    length: 1
+    update_interval: 45s
 
 number:
   - platform: vitoconnect
