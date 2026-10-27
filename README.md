@@ -79,6 +79,21 @@ binary_sensor:
 Tested with OptoLink ESP32 adapter from here:
 <https://github.com/openv/openv/wiki/Bauanleitung-ESP32-Adafruit-Feather-Huzzah32-and-Proto-Wing>
 
+## Per-sensor update intervals
+
+The default polling interval is 30 seconds. Set `update_interval` on an individual `sensor` or `binary_sensor` to read a slowly changing value less often:
+
+```yaml
+sensor:
+  - platform: vitoconnect
+    name: "Betriebszeit Leiterplatte"
+    address: 0x08FA
+    length: 4
+    update_interval: 120s
+```
+
+The `vitoconnect` hub's `update_interval` still controls entities without their own interval. Custom intervals begin after the first hub poll. Reads are scheduled at these intervals; the shared Optolink connection may deliver them later when other requests are queued. Write readbacks keep their priority.
+
 ## Writable values (ESP-IDF)
 
 This fork also provides native ESPHome `number`, `select`, and `switch` platforms under the existing `vitoconnect` name. The ESP32-C6 build uses `framework: {type: esp-idf}`. Existing sensors and binary sensors keep their behavior.
