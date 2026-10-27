@@ -114,7 +114,7 @@ void VitoConnect::_onData(uint8_t* data, uint8_t len, void* arg) {
   if (cbArg->is_write) {
     if (cbArg->v->protocol == "KW" && (data == nullptr || len != 1 || data[0] != 0x00)) {
       ESP_LOGW(TAG, "KW write was not acknowledged");
-    } else {
+    } else if (cbArg->dp != nullptr) {
       cbArg->v->_pending_readbacks.push_back(cbArg->dp);
     }
     delete cbArg;
@@ -132,7 +132,7 @@ void VitoConnect::_onError(uint8_t error, void* arg) {
 }
 
 bool VitoConnect::write_datapoint(Datapoint *datapoint, uint16_t address, uint8_t *data, uint8_t length) {
-  if (_optolink == nullptr || datapoint == nullptr || data == nullptr || length == 0 || length > MAX_DP_LENGTH) {
+  if (_optolink == nullptr || data == nullptr || length == 0 || length > MAX_DP_LENGTH) {
     ESP_LOGW(TAG, "Invalid write request for address 0x%04X", address);
     return false;
   }
@@ -144,6 +144,10 @@ bool VitoConnect::write_datapoint(Datapoint *datapoint, uint16_t address, uint8_
     return false;
   }
   return true;
+}
+
+bool VitoConnect::write_command(uint16_t address, uint8_t *data, uint8_t length) {
+  return this->write_datapoint(nullptr, address, data, length);
 }
 
 }  // namespace vitoconnect
