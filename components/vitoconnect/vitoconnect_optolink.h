@@ -71,7 +71,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef MAX_DP_LENGTH
   /** @brief Maximum size in bytes of a datapoint
    */
-  #define MAX_DP_LENGTH 9
+  #define MAX_DP_LENGTH 10
 #endif
 
 #include "esphome/components/uart/uart.h"
