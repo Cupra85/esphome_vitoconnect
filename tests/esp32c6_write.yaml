@@ -41,6 +41,13 @@ sensor:
     length: 1
     update_interval: 120s
 
+  - platform: vitoconnect
+    name: CI Block Offset Sensor
+    address: 0xA30B
+    length: 10
+    byte_offset: 6
+    value_length: 2
+
 binary_sensor:
   - platform: vitoconnect
     name: CI Slow Binary Sensor
