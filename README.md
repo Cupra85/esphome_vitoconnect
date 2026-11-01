@@ -102,7 +102,7 @@ A control command queues an Optolink write. For `number`, `select`, and `switch`
 
 `number`, `select`, and `switch` require `address` (write address) and accept `state_address` (read address, defaults to `address`). Both use the same `length`. Supported widths are 1 or 2 bytes for `select` and `switch`, and 1, 2 or 4 bytes for `number`.
 
-- `number`: set `min_value`, `max_value`, and `step`; optional `scale` converts a raw integer to the displayed value (default 1), and `signed` enables signed two's-complement values (default false).
+- `number`: set `min_value`, `max_value`, and `step`; optional `scale` converts a raw integer to the displayed value (default 1), and `signed` enables signed two's-complement values (default false). Set `mode: slider` to display the number as a slider in ESPHome and Home Assistant.
 - `select`: configure `options` as a mapping from raw integer to unique display label.
 - `switch`: optional `on_value` and `off_value` default to 1 and 0. Startup restoration is disabled, so reconnecting cannot replay an old switch value.
 - `button`: set `address` and `value` (unsigned raw integer). Optional `length` defaults to 1 byte; 1, 2 and 4 bytes are supported. The value must fit the selected length. The button is never polled and sends exactly one write per press.
@@ -128,6 +128,7 @@ Built based on [VitoWifi] by [Bert Melis] and inspired by [vitowifi_esphome] by 
 
 MIT License
 Copyright (c) 2023 Philipp Danner
+Copyright (c) 2026 Daniel Cürten
 
 ## Support Development
 
