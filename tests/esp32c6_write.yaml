@@ -72,6 +72,17 @@ select:
       0: "Off"
       1: "On"
 
+  - platform: vitoconnect
+    name: CI Write Select List
+    address: 0x1007
+    state_address: 0x1008
+    length: 1
+    options:
+      - value: 0
+        label: "Off"
+      - value: 1
+        label: "On"
+
 switch:
   - platform: vitoconnect
     name: CI Write Switch
