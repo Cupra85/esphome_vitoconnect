@@ -140,3 +140,31 @@ Copyright (c) 2023 Philipp Danner
 [vitowifi_esphome]: https://github.com/phha/vitowifi_esphome
 [Bert Melis]: https://github.com/bertmelis
 [Philipp Hack]: https://github.com/phha
+
+
+## Select option formats
+
+`select.vitoconnect` accepts two equivalent `options` formats. The existing mapping format remains supported:
+
+```yaml
+options:
+  0: "Off"
+  1: "On"
+```
+
+You can also use a list of `value`/`label` pairs:
+
+```yaml
+select:
+  - platform: vitoconnect
+    name: "Example mode"
+    address: 0x1001  # Example only; use a confirmed writable address
+    length: 1
+    options:
+      - value: 0
+        label: "Off"
+      - value: 1
+        label: "On"
+```
+
+Option values must be unique, fit the configured byte length, and have unique labels. The list format is normalized to the same raw-value mapping before code generation.
