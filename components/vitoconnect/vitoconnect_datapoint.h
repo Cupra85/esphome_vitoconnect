@@ -1,6 +1,7 @@
 /* VitoWiFi
 
 Copyright 2019 Bert Melis
+Copyright 2026 Daniel Cürten
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
