@@ -1,6 +1,5 @@
 /* VitoWiFi
 
-Copyright 2019 Bert Melis
 Copyright 2026 Daniel Cürten
 
 Permission is hereby granted, free of charge, to any person obtaining a
@@ -67,7 +66,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef VITOWIFI_MAX_QUEUE_LENGTH
   /** @brief Maximum number of datapoints the Optolink queue can hold
    */
-  #define VITOWIFI_MAX_QUEUE_LENGTH 128
+  #define VITOWIFI_MAX_QUEUE_LENGTH 200
 #endif
 #ifndef MAX_DP_LENGTH
   /** @brief Maximum size in bytes of a datapoint
