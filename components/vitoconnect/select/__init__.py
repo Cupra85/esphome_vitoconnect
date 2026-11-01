@@ -11,6 +11,25 @@ CONF_STATE_ADDRESS = "state_address"
 OPTOLINKSelect = vitoconnect_ns.class_("OPTOLINKSelect", select.Select)
 
 
+def _normalize_options(options):
+    if isinstance(options, dict):
+        return cv.Schema({cv.int_: cv.string})(options)
+    if isinstance(options, list):
+        entry_schema = cv.Schema({
+            cv.Required("value"): cv.int_,
+            cv.Required("label"): cv.string,
+        })
+        normalized = {}
+        for entry in options:
+            item = entry_schema(entry)
+            raw = item["value"]
+            if raw in normalized:
+                raise cv.Invalid(f"duplicate option value: {raw}")
+            normalized[raw] = item["label"]
+        return normalized
+    raise cv.Invalid("options must be a mapping or a list of value/label pairs")
+
+
 def _validate(config):
     options = config[CONF_OPTIONS]
     if not options:
@@ -29,7 +48,7 @@ CONFIG_SCHEMA = cv.All(
         cv.Required(CONF_ADDRESS): cv.hex_uint16_t,
         cv.Optional(CONF_STATE_ADDRESS): cv.hex_uint16_t,
         cv.Optional(CONF_LENGTH, default=1): cv.int_range(min=1, max=2),
-        cv.Required(CONF_OPTIONS): cv.Schema({cv.int_: cv.string}),
+        cv.Required(CONF_OPTIONS): _normalize_options,
     }),
     _validate,
 )
