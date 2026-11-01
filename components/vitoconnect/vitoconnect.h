@@ -2,6 +2,7 @@
   optolink.cpp - Connect Viessmann heating devices via Optolink to ESPhome
 
   Copyright (C) 2023  Philipp Danner
+  Copyright (C) 2026  Daniel Cürten
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
